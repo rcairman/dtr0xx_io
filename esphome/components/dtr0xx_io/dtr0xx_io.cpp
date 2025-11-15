@@ -29,6 +29,8 @@ void dtr0xx_ioComponent::setup() {
 
   // read state from shift register
   this->read_gpio_();
+
+  this->dingtian_pl_pin_->digital_write(false);
 }
 
 void dtr0xx_ioComponent::update() {
