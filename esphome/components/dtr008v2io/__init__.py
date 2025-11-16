@@ -24,7 +24,7 @@ dtr008v2ioGPIOPin = dtr008v2io_ns.class_(
 CONF_dtr008v2io = "dtr008v2io"
 CONF_OE_PIN = "oe_pin"
 
-DTR008V2IO_PINS = 8
+DTR008V2IO_PINS = 32
 
 CONFIG_SCHEMA = cv.Schema(
     {
