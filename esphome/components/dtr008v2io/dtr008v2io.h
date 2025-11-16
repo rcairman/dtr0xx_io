@@ -2,7 +2,6 @@
 
 #include "esphome/core/component.h"
 #include "esphome/core/hal.h"
-#include "esphome/core/helpers.h"
 #include "esphome/components/spi/spi.h"
 
 namespace esphome {
@@ -14,7 +13,10 @@ class dtr008v2ioComponent : public Component,
                                                   spi::CLOCK_PHASE_LEADING,
                                                   spi::DATA_RATE_4MHZ> {
  public:
-  static constexpr uint8_t segment_pins = 8;
+  // DT-R032 = 4 segmenty x 8 pinów = 32 I/O
+  static constexpr uint8_t segment_count = 4;
+  static constexpr uint8_t segment_pins = segment_count * 8;
+
   dtr008v2ioComponent() = default;
 
   void setup() override;
@@ -31,19 +33,20 @@ class dtr008v2ioComponent : public Component,
   void digital_write_(uint16_t pin, bool value);
   void transfer_gpio_();
 
-  GPIOPin *oe_pin_;
-  uint8_t input_byte_;
-  uint8_t output_byte_;
-  bool use_inputs_;
+  GPIOPin *oe_pin_{nullptr};
+  uint32_t input_bits_{0};
+  uint32_t output_bits_{0};
+  bool use_inputs_{true};
 };
 
-/// Helper class to expose a SN74HC165/595 pin as an internal GPIO pin.
 class dtr008v2ioGPIOPin : public GPIOPin, public Parented<dtr008v2ioComponent> {
  public:
   void setup() override {}
   void pin_mode(gpio::Flags flags) override {}
+
   bool digital_read() override;
   void digital_write(bool value) override;
+
   std::string dump_summary() const override;
 
   void set_pin(uint16_t pin) { pin_ = pin; }
@@ -53,9 +56,9 @@ class dtr008v2ioGPIOPin : public GPIOPin, public Parented<dtr008v2ioComponent> {
   gpio::Flags get_flags() const override { return this->flags_; }
 
  protected:
-  uint16_t pin_;
-  bool inverted_;
-  gpio::Flags flags_;
+  uint16_t pin_{};
+  bool inverted_{false};
+  gpio::Flags flags_{gpio::FLAG_INPUT};
 };
 
 }  // namespace dtr008v2io
