@@ -13,7 +13,7 @@ class dtr032v2ioComponent : public Component,
                                                   spi::CLOCK_PHASE_LEADING,
                                                   spi::DATA_RATE_4MHZ> {
  public:
-  // DT-R032 = 4 segmenty x 8 pinów = 32 I/O
+  // DT-R032 = 4 segments x 8 pins = 32 I/O
   static constexpr uint8_t segment_count = 4;
   static constexpr uint8_t segment_pins = segment_count * 8;
 
