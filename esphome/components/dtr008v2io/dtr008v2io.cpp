@@ -85,7 +85,7 @@ void dtr008v2ioComponent::transfer_gpio_() {
   // - disable() raises CS (latch) and releases spi device
   //
   // IMPORTANT: we DO NOT toggle OE here. OE is held LOW (outputs enabled) permanently.
-  taskENTER_CRITICAL();
+  //taskENTER_CRITICAL();
 
   // ensure latch is low before transmission
   if (this->latch_pin_ != nullptr) {
@@ -96,7 +96,7 @@ void dtr008v2ioComponent::transfer_gpio_() {
   this->input_byte_ = this->transfer_byte(this->output_byte_);
   this->disable();
 
-  taskEXIT_CRITICAL();
+  //taskEXIT_CRITICAL();
 
   // Pulse latch after transmission
   if (this->latch_pin_ != nullptr) {
