@@ -14,9 +14,19 @@ void dtr008v2ioComponent::setup() {
     // Keep outputs enabled permanently (active low OE)
     // That matches manufacturer's approach: OE always active (LOW).
     this->oe_pin_->digital_write(false);
+    ESP_LOGCONFIG(TAG, "  OE pin configured (held LOW)");
+  } else {
+    ESP_LOGCONFIG(TAG, "  OE pin not configured (assume hardware tied LOW)");
   }
 
-  // SPI init
+  if (this->latch_pin_ != nullptr) {
+    this->latch_pin_->setup();
+    this->latch_pin_->digital_write(false);
+    ESP_LOGCONFIG(TAG, "  LATCH pin configured");
+  } else {
+    ESP_LOGE(TAG, "No LATCH pin configured! Outputs may glitch.");
+  }
+
   this->spi_setup();
 
   // Perform an initial transfer to sync input_byte_ state
@@ -33,8 +43,9 @@ void dtr008v2ioComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "dtr008v2io:");
   if (this->oe_pin_ != nullptr) {
     ESP_LOGCONFIG(TAG, "  OE pin configured (held LOW)");
-  } else {
-    ESP_LOGCONFIG(TAG, "  OE pin not configured (assume hardware pull/externally tied LOW)");
+  }
+  if (this->latch_pin_ != nullptr) {
+    ESP_LOGCONFIG(TAG, "  LATCH pin configured");
   }
 }
 
@@ -74,11 +85,23 @@ void dtr008v2ioComponent::transfer_gpio_() {
   // - disable() raises CS (latch) and releases spi device
   //
   // IMPORTANT: we DO NOT toggle OE here. OE is held LOW (outputs enabled) permanently.
+  taskENTER_CRITICAL();
   this->enable();
+  if (this->latch_pin_ != nullptr) {
+    this->latch_pin_->digital_write(false);  // LATCH low przed transmisją
+  }
   // transfer_byte handles a single byte exchange; for 8-channel setup it's sufficient
   this->input_byte_ = this->transfer_byte(this->output_byte_);
   this->disable();
-  // Do not change oe_pin_ state here (kept low always)
+  taskEXIT_CRITICAL();
+
+  // Ręczne sterowanie LATCH
+  if (this->latch_pin_ != nullptr) {
+    delayMicroseconds(2);
+    this->latch_pin_->digital_write(true);
+    delayMicroseconds(2);
+    this->latch_pin_->digital_write(false);
+  }
 }
 
 bool dtr008v2ioGPIOPin::digital_read() {

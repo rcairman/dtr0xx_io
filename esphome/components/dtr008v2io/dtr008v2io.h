@@ -23,6 +23,7 @@ class dtr008v2ioComponent : public Component,
   void dump_config() override;
 
   void set_oe_pin(GPIOPin *pin) { this->oe_pin_ = pin; }
+  void set_latch_pin(GPIOPin *pin) { this->latch_pin_ = pin; }
   void set_use_inputs() { this->use_inputs_ = true; }
 
  protected:
@@ -32,6 +33,7 @@ class dtr008v2ioComponent : public Component,
   void transfer_gpio_();
 
   GPIOPin *oe_pin_{nullptr};
+  GPIOPin *latch_pin_{nullptr};
   uint8_t input_byte_{0};
   uint8_t output_byte_{0};
   bool use_inputs_{false};
