@@ -23,6 +23,7 @@ dtr008v2ioGPIOPin = dtr008v2io_ns.class_(
 
 CONF_dtr008v2io = "dtr008v2io"
 CONF_OE_PIN = "oe_pin"
+CONF_LATCH_PIN = "latch_pin"
 
 DTR008V2IO_PINS = 8
 
@@ -30,15 +31,20 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.Required(CONF_ID): cv.declare_id(dtr008v2ioComponent),
         cv.Required(CONF_OE_PIN): pins.gpio_output_pin_schema,
+        cv.Required(CONF_LATCH_PIN): pins.gpio_output_pin_schema,
     }
-).extend(cv.COMPONENT_SCHEMA).extend(spi.spi_device_schema(cs_pin_required=True))
+).extend(cv.COMPONENT_SCHEMA).extend(spi.spi_device_schema(cs_pin_required=False))
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await spi.register_spi_device(var, config)
+
     oe_pin = await cg.gpio_pin_expression(config[CONF_OE_PIN])
     cg.add(var.set_oe_pin(oe_pin))
+
+    latch_pin = await cg.gpio_pin_expression(config[CONF_LATCH_PIN])
+    cg.add(var.set_latch_pin(latch_pin))
 
 def validate_mode(value):
     if value[CONF_INPUT] == value[CONF_OUTPUT]:

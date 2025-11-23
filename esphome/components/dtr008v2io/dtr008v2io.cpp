@@ -86,16 +86,19 @@ void dtr008v2ioComponent::transfer_gpio_() {
   //
   // IMPORTANT: we DO NOT toggle OE here. OE is held LOW (outputs enabled) permanently.
   taskENTER_CRITICAL();
-  this->enable();
+
+  // ensure latch is low before transmission
   if (this->latch_pin_ != nullptr) {
-    this->latch_pin_->digital_write(false);  // LATCH low przed transmisją
+    this->latch_pin_->digital_write(false);
   }
   // transfer_byte handles a single byte exchange; for 8-channel setup it's sufficient
+  this->enable();
   this->input_byte_ = this->transfer_byte(this->output_byte_);
   this->disable();
+
   taskEXIT_CRITICAL();
 
-  // Ręczne sterowanie LATCH
+  // Pulse latch after transmission
   if (this->latch_pin_ != nullptr) {
     delayMicroseconds(2);
     this->latch_pin_->digital_write(true);
