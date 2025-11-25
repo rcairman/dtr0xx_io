@@ -99,12 +99,12 @@ void dtr008v2ioComponent::transfer_gpio_() {
   //taskEXIT_CRITICAL();
 
   // Pulse latch after transmission
-  if (this->latch_pin_ != nullptr) {
-    delayMicroseconds(2);
-    this->latch_pin_->digital_write(true);
-    delayMicroseconds(2);
-    this->latch_pin_->digital_write(false);
-  }
+  //if (this->latch_pin_ != nullptr) {
+  //  delayMicroseconds(2);
+  //  this->latch_pin_->digital_write(true);
+  //  delayMicroseconds(2);
+ //   this->latch_pin_->digital_write(false);
+ // }
 }
 
 bool dtr008v2ioGPIOPin::digital_read() {
