@@ -89,7 +89,7 @@ void dtr008v2ioComponent::transfer_gpio_() {
 
   // ensure latch is low before transmission
   if (this->latch_pin_ != nullptr) {
-    this->latch_pin_->digital_write(true);
+    this->latch_pin_->digital_write(false);
   }
   // transfer_byte handles a single byte exchange; for 8-channel setup it's sufficient
   this->enable();
@@ -99,12 +99,12 @@ void dtr008v2ioComponent::transfer_gpio_() {
   //taskEXIT_CRITICAL();
 
   // Pulse latch after transmission
-  //if (this->latch_pin_ != nullptr) {
-  //  delayMicroseconds(2);
-  //  this->latch_pin_->digital_write(true);
-  //  delayMicroseconds(2);
- //   this->latch_pin_->digital_write(false);
- // }
+  if (this->latch_pin_ != nullptr) {
+ //   delayMicroseconds(2);
+    this->latch_pin_->digital_write(true);
+    delayMicroseconds(2);
+    this->latch_pin_->digital_write(false);
+  }
 }
 
 bool dtr008v2ioGPIOPin::digital_read() {
