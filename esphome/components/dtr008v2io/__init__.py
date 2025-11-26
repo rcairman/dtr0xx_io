@@ -21,10 +21,10 @@ dtr008v2ioGPIOPin = dtr008v2io_ns.class_(
 
 CONF_dtr008v2io = "dtr008v2io"
 CONF_OE_PIN = "oe_pin"
-CONF_LATCH_PIN = "latch_pin"
-CONF_DATA_PIN = "data_pin"
+CONF_LATCH_LOAD_PIN = "latch_load_pin"   # shared STCP (595) and /PL (165)
+CONF_DATA_OUT_PIN = "data_out_pin"       # SER -> 74HC595
+CONF_DATA_IN_PIN = "data_in_pin"         # QH  -> 74HC165
 CONF_CLOCK_PIN = "clock_pin"
-CONF_LOAD_PIN = "load_pin"
 
 DTR008V2IO_PINS = 8
 
@@ -32,10 +32,10 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.Required(CONF_ID): cv.declare_id(dtr008v2ioComponent),
         cv.Required(CONF_OE_PIN): pins.gpio_output_pin_schema,
-        cv.Required(CONF_LATCH_PIN): pins.gpio_output_pin_schema,
-        cv.Required(CONF_DATA_PIN): pins.gpio_output_pin_schema,
+        cv.Required(CONF_LATCH_LOAD_PIN): pins.gpio_output_pin_schema,
+        cv.Required(CONF_DATA_OUT_PIN): pins.gpio_output_pin_schema,
+        cv.Required(CONF_DATA_IN_PIN): pins.gpio_input_pin_schema,
         cv.Required(CONF_CLOCK_PIN): pins.gpio_output_pin_schema,
-        cv.Optional(CONF_LOAD_PIN): pins.gpio_output_pin_schema,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -46,18 +46,17 @@ async def to_code(config):
     oe_pin = await cg.gpio_pin_expression(config[CONF_OE_PIN])
     cg.add(var.set_oe_pin(oe_pin))
 
-    latch_pin = await cg.gpio_pin_expression(config[CONF_LATCH_PIN])
-    cg.add(var.set_latch_pin(latch_pin))
+    ll_pin = await cg.gpio_pin_expression(config[CONF_LATCH_LOAD_PIN])
+    cg.add(var.set_latch_load_pin(ll_pin))
 
-    data_pin = await cg.gpio_pin_expression(config[CONF_DATA_PIN])
-    cg.add(var.set_data_pin(data_pin))
+    dout_pin = await cg.gpio_pin_expression(config[CONF_DATA_OUT_PIN])
+    cg.add(var.set_data_out_pin(dout_pin))
 
-    clock_pin = await cg.gpio_pin_expression(config[CONF_CLOCK_PIN])
-    cg.add(var.set_clock_pin(clock_pin))
+    din_pin = await cg.gpio_pin_expression(config[CONF_DATA_IN_PIN])
+    cg.add(var.set_data_in_pin(din_pin))
 
-    if CONF_LOAD_PIN in config:
-        load_pin = await cg.gpio_pin_expression(config[CONF_LOAD_PIN])
-        cg.add(var.set_load_pin(load_pin))
+    clk_pin = await cg.gpio_pin_expression(config[CONF_CLOCK_PIN])
+    cg.add(var.set_clock_pin(clk_pin))
 
 def validate_mode(value):
     if value[CONF_INPUT] == value[CONF_OUTPUT]:

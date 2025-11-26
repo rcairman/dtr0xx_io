@@ -18,28 +18,31 @@ class dtr008v2ioComponent : public Component {
   void dump_config() override;
 
   void set_oe_pin(GPIOPin *pin) { this->oe_pin_ = pin; }
-  void set_latch_pin(GPIOPin *pin) { this->latch_pin_ = pin; }
-  void set_data_pin(GPIOPin *pin) { this->data_pin_ = pin; }
+  void set_latch_load_pin(GPIOPin *pin) { this->latch_load_pin_ = pin; }
+  void set_data_out_pin(GPIOPin *pin) { this->data_out_pin_ = pin; }
+  void set_data_in_pin(GPIOPin *pin) { this->data_in_pin_ = pin; }
   void set_clock_pin(GPIOPin *pin) { this->clock_pin_ = pin; }
-  void set_load_pin(GPIOPin *pin) { this->load_pin_ = pin; }
   void set_use_inputs() { this->use_inputs_ = true; }
 
  protected:
   friend class dtr008v2ioGPIOPin;
   bool digital_read_(uint16_t pin);
   void digital_write_(uint16_t pin, bool value);
+
   void transfer_gpio_();
   void shift_out_(uint8_t value);
-  uint8_t shift_in_();
+  uint8_t shift_in_(uint8_t clocks);
 
   GPIOPin *oe_pin_{nullptr};
-  GPIOPin *latch_pin_{nullptr};
-  GPIOPin *data_pin_{nullptr};
+  GPIOPin *latch_load_pin_{nullptr};
+  GPIOPin *data_out_pin_{nullptr};
+  GPIOPin *data_in_pin_{nullptr};
   GPIOPin *clock_pin_{nullptr};
-  GPIOPin *load_pin_{nullptr};
+
   uint8_t input_byte_{0};
   uint8_t output_byte_{0};
   bool use_inputs_{false};
+  uint8_t last_output_{0};
 };
 
 class dtr008v2ioGPIOPin : public GPIOPin, public Parented<dtr008v2ioComponent> {
