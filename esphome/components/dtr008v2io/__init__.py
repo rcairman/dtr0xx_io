@@ -1,7 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import pins
-from esphome.components import spi
 from esphome.const import (
     CONF_ID,
     CONF_MODE,
@@ -11,7 +10,6 @@ from esphome.const import (
     CONF_OUTPUT,
 )
 
-DEPENDENCIES = ["spi"]
 MULTI_CONF = True
 
 dtr008v2io_ns = cg.esphome_ns.namespace("dtr008v2io")
@@ -24,6 +22,9 @@ dtr008v2ioGPIOPin = dtr008v2io_ns.class_(
 CONF_dtr008v2io = "dtr008v2io"
 CONF_OE_PIN = "oe_pin"
 CONF_LATCH_PIN = "latch_pin"
+CONF_DATA_PIN = "data_pin"
+CONF_CLOCK_PIN = "clock_pin"
+CONF_LOAD_PIN = "load_pin"
 
 DTR008V2IO_PINS = 8
 
@@ -32,13 +33,15 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Required(CONF_ID): cv.declare_id(dtr008v2ioComponent),
         cv.Required(CONF_OE_PIN): pins.gpio_output_pin_schema,
         cv.Required(CONF_LATCH_PIN): pins.gpio_output_pin_schema,
+        cv.Required(CONF_DATA_PIN): pins.gpio_output_pin_schema,
+        cv.Required(CONF_CLOCK_PIN): pins.gpio_output_pin_schema,
+        cv.Optional(CONF_LOAD_PIN): pins.gpio_output_pin_schema,
     }
-).extend(cv.COMPONENT_SCHEMA).extend(spi.spi_device_schema(cs_pin_required=False))
+).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
-    await spi.register_spi_device(var, config)
 
     oe_pin = await cg.gpio_pin_expression(config[CONF_OE_PIN])
     cg.add(var.set_oe_pin(oe_pin))
@@ -46,18 +49,26 @@ async def to_code(config):
     latch_pin = await cg.gpio_pin_expression(config[CONF_LATCH_PIN])
     cg.add(var.set_latch_pin(latch_pin))
 
+    data_pin = await cg.gpio_pin_expression(config[CONF_DATA_PIN])
+    cg.add(var.set_data_pin(data_pin))
+
+    clock_pin = await cg.gpio_pin_expression(config[CONF_CLOCK_PIN])
+    cg.add(var.set_clock_pin(clock_pin))
+
+    if CONF_LOAD_PIN in config:
+        load_pin = await cg.gpio_pin_expression(config[CONF_LOAD_PIN])
+        cg.add(var.set_load_pin(load_pin))
+
 def validate_mode(value):
     if value[CONF_INPUT] == value[CONF_OUTPUT]:
         raise cv.Invalid("Mode must be either input or output")
     return value
-
 
 dtr008v2io_PIN_SCHEMA = pins.gpio_base_schema(
     dtr008v2ioGPIOPin,
     cv.int_range(min=0, max=DTR008V2IO_PINS-1),
     modes=[CONF_INPUT, CONF_OUTPUT],
     mode_validator=validate_mode,
-    #invertable=True,
 ).extend(
     {
         cv.Required(CONF_dtr008v2io): cv.use_id(dtr008v2ioComponent),
@@ -67,7 +78,6 @@ dtr008v2io_PIN_SCHEMA = pins.gpio_base_schema(
 def dtr008v2io_pin_final_validate(pin_config, parent_config):
     if pin_config[CONF_NUMBER] >= DTR008V2IO_PINS:
         raise cv.Invalid(f"Pin number must be less than {DTR008V2IO_PINS}")
-
 
 @pins.PIN_SCHEMA_REGISTRY.register(CONF_dtr008v2io, dtr008v2io_PIN_SCHEMA, dtr008v2io_pin_final_validate)
 async def dtr008v2io_pin_to_code(config):

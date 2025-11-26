@@ -3,16 +3,11 @@
 #include "esphome/core/component.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/helpers.h"
-#include "esphome/components/spi/spi.h"
 
 namespace esphome {
 namespace dtr008v2io {
 
-class dtr008v2ioComponent : public Component,
-                            public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST,
-                                                  spi::CLOCK_POLARITY_LOW,
-                                                  spi::CLOCK_PHASE_LEADING,
-                                                  spi::DATA_RATE_1MHZ> {
+class dtr008v2ioComponent : public Component {
  public:
   static constexpr uint8_t segment_pins = 8;
   dtr008v2ioComponent() = default;
@@ -24,6 +19,9 @@ class dtr008v2ioComponent : public Component,
 
   void set_oe_pin(GPIOPin *pin) { this->oe_pin_ = pin; }
   void set_latch_pin(GPIOPin *pin) { this->latch_pin_ = pin; }
+  void set_data_pin(GPIOPin *pin) { this->data_pin_ = pin; }
+  void set_clock_pin(GPIOPin *pin) { this->clock_pin_ = pin; }
+  void set_load_pin(GPIOPin *pin) { this->load_pin_ = pin; }
   void set_use_inputs() { this->use_inputs_ = true; }
 
  protected:
@@ -31,15 +29,19 @@ class dtr008v2ioComponent : public Component,
   bool digital_read_(uint16_t pin);
   void digital_write_(uint16_t pin, bool value);
   void transfer_gpio_();
+  void shift_out_(uint8_t value);
+  uint8_t shift_in_();
 
   GPIOPin *oe_pin_{nullptr};
   GPIOPin *latch_pin_{nullptr};
+  GPIOPin *data_pin_{nullptr};
+  GPIOPin *clock_pin_{nullptr};
+  GPIOPin *load_pin_{nullptr};
   uint8_t input_byte_{0};
   uint8_t output_byte_{0};
   bool use_inputs_{false};
 };
 
-/// Helper class to expose a SN74HC165/595 pin as an internal GPIO pin.
 class dtr008v2ioGPIOPin : public GPIOPin, public Parented<dtr008v2ioComponent> {
  public:
   void setup() override {}
@@ -50,7 +52,6 @@ class dtr008v2ioGPIOPin : public GPIOPin, public Parented<dtr008v2ioComponent> {
 
   void set_pin(uint16_t pin) { pin_ = pin; }
   void set_inverted(bool inverted) { inverted_ = inverted; }
-
   void set_flags(gpio::Flags flags) { this->flags_ = flags; }
   gpio::Flags get_flags() const override { return this->flags_; }
 
