@@ -16,7 +16,7 @@ MULTI_CONF = True
 
 dtr0xx_io_ns = cg.esphome_ns.namespace("dtr0xx_io")
 
-dtr0xx_ioComponent = dtr0xx_io_ns.class_("dtr0xx_ioComponent", cg.Component)
+dtr0xx_ioComponent = dtr0xx_io_ns.class_("dtr0xx_ioComponent", cg.PollingComponent)
 dtr0xx_ioGPIOPin = dtr0xx_io_ns.class_(
     "dtr0xx_ioGPIOPin", cg.GPIOPin, cg.Parented.template(dtr0xx_ioComponent)
 )
@@ -28,6 +28,7 @@ CONF_SR_COUNT = "sr_count"
 CONF_DINGTIAN_Q7= "dingtian_q7_pin"
 CONF_DINGTIAN_SDI = "dingtian_sdi_pin"
 CONF_DINGTIAN_CLK = "dingtian_clk_pin"
+CONF_DINGTIAN_V2 = "dingtian_v2"
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -36,10 +37,13 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Required(CONF_DINGTIAN_SDI): pins.gpio_output_pin_schema,
         cv.Required(CONF_DINGTIAN_CLK): pins.gpio_output_pin_schema,
         cv.Required(CONF_DINGTIAN_PL): pins.gpio_output_pin_schema,
-        cv.Optional(CONF_DINGTIAN_RCK): pins.gpio_output_pin_schema,
+        cv.Required(CONF_DINGTIAN_RCK): pins.gpio_output_pin_schema,
         cv.Optional(CONF_SR_COUNT, default=1): cv.int_range(min=1, max=256),
+        cv.Optional(CONF_DINGTIAN_V2, default=False): cv.boolean,
     }
-).extend(cv.COMPONENT_SCHEMA)
+).extend(
+            cv.polling_component_schema("40ms")
+        )
 
 
 async def to_code(config):
@@ -53,10 +57,12 @@ async def to_code(config):
     cg.add(var.set_dingtian_clk_pin(dingtian_clk_pin))
     dingtian_pl_pin = await cg.gpio_pin_expression(config[CONF_DINGTIAN_PL])
     cg.add(var.set_dingtian_pl_pin(dingtian_pl_pin))
-    if CONF_DINGTIAN_RCK in config:
-        dingtian_rck_pin = await cg.gpio_pin_expression(config[CONF_DINGTIAN_RCK])
-        cg.add(var.set_dingtian_rck_pin(dingtian_rck_pin))
+    dingtian_rck_pin = await cg.gpio_pin_expression(config[CONF_DINGTIAN_RCK])
+    cg.add(var.set_dingtian_rck_pin(dingtian_rck_pin))
 
+    if CONF_DINGTIAN_V2 in config:
+        cg.add(var.set_dingtian_v2(config[CONF_DINGTIAN_V2]))
+    
     cg.add(var.set_sr_count(config[CONF_SR_COUNT]))
 
 

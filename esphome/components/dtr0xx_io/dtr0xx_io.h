@@ -9,12 +9,12 @@
 namespace esphome {
 namespace dtr0xx_io {
 
-class dtr0xx_ioComponent : public Component {
+class dtr0xx_ioComponent : public PollingComponent {
  public:
   dtr0xx_ioComponent() = default;
 
   void setup() override;
-  void loop() override;
+  void update() override;
   float get_setup_priority() const override;
   void dump_config() override;
 
@@ -32,6 +32,11 @@ class dtr0xx_ioComponent : public Component {
     this->output_bits_.resize(count * 8);
   }
 
+  void set_dingtian_v2(bool dingtian_v2)
+  {
+    this->dingtian_v2_ = dingtian_v2;
+  }
+
  protected:
   friend class dtr0xx_ioGPIOPin;
   bool digital_read_(uint16_t pin);
@@ -47,6 +52,7 @@ class dtr0xx_ioComponent : public Component {
   uint8_t sr_count_;
   std::vector<bool> input_bits_;
   std::vector<bool> output_bits_;
+  bool dingtian_v2_;
 };
 
 /// Helper class to expose a SN74HC165 pin as an internal input GPIO pin.
