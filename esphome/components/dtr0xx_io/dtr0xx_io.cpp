@@ -19,7 +19,6 @@ void dtr0xx_ioComponent::setup() {
   this->dingtian_pl_pin_->setup();
   this->dingtian_rck_pin_->setup();
 
-
   this->dingtian_clk_pin_->digital_write(false);
 
   // Set OE to false, PL to true before first read to not flicker the relays
@@ -48,9 +47,8 @@ bool dtr0xx_ioComponent::digital_read_(uint16_t pin) {
   return this->input_bits_[pin];
 }
 
-void dtr0xx_ioComponent::digital_write_(uint16_t pin, bool value)
-{
-    if (pin >= this->sr_count_ * 8) {
+void dtr0xx_ioComponent::digital_write_(uint16_t pin, bool value) {
+  if (pin >= this->sr_count_ * 8) {
     ESP_LOGE(TAG, "Pin %u is out of range! Maximum pin number with %u chips in series is %u", pin, this->sr_count_,
              (this->sr_count_ * 8) - 1);
     return;
@@ -60,9 +58,9 @@ void dtr0xx_ioComponent::digital_write_(uint16_t pin, bool value)
 }
 
 void dtr0xx_ioComponent::read_gpio_() {
-  // enter critical area to not disturb the timming
+  // enter critical area to not disturb the timing
   taskENTER_CRITICAL(&readGpioMux);
-  
+
   // RCK needs to be low during shifting
   this->dingtian_rck_pin_->digital_write(false);
 
@@ -75,8 +73,8 @@ void dtr0xx_ioComponent::read_gpio_() {
 
   for (uint8_t i = 0; i < this->sr_count_; i++) {
     for (uint8_t j = 0; j < 8; j++) {
-      this->input_bits_[(i * 8) + (7 - j)] = this->dingtian_q7_pin_->digital_read();
-      this->dingtian_sdi_pin_->digital_write(this->output_bits_[(i * 8) + (7 - j)]);
+      this->input_bits_[(i * 8) + j] = this->dingtian_q7_pin_->digital_read();
+      this->dingtian_sdi_pin_->digital_write(this->output_bits_[(i * 8) + j]);
       this->dingtian_clk_pin_->digital_write(true);
       delayMicroseconds(1);
       this->dingtian_clk_pin_->digital_write(false);
@@ -86,7 +84,7 @@ void dtr0xx_ioComponent::read_gpio_() {
 
   // if V1 HW
   if ( false == dingtian_v2_ ) {
-    // PL needs to be fasle during output latching, and always for the relays to work!!
+    // PL needs to be false during output latching, and always for the relays to work!!
     this->dingtian_pl_pin_->digital_write(false);
     delayMicroseconds(1);
   }
@@ -99,13 +97,17 @@ void dtr0xx_ioComponent::read_gpio_() {
 
 float dtr0xx_ioComponent::get_setup_priority() const { return setup_priority::IO; }
 
-bool dtr0xx_ioGPIOPin::digital_read() { 
-  return this->parent_->digital_read_(this->pin_) != this->inverted_; }
+bool dtr0xx_ioGPIOPin::digital_read() {
+  return this->parent_->digital_read_(this->pin_) != this->inverted_;
+}
 
 void dtr0xx_ioGPIOPin::digital_write(bool value) {
-  this->parent_->digital_write_(this->pin_, value != this->inverted_);}
+  this->parent_->digital_write_(this->pin_, value != this->inverted_);
+}
 
-std::string dtr0xx_ioGPIOPin::dump_summary() const { return str_snprintf("%u via dtr0xx_io", 18, pin_); }
+std::string dtr0xx_ioGPIOPin::dump_summary() const {
+  return str_snprintf("%u via dtr0xx_io", 18, pin_);
+}
 
 }  // namespace dtr0xx_io
 }  // namespace esphome
